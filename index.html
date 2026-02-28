@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Local Shop</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+html{scroll-behavior:smooth}
+
+:root{
+  --primary:#ff6b00;
+  --bg:#f4f6f9;
+  --text:#333;
+  --card:#fff;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  transition:0.3s;
+}
+
+.dark{
+  --bg:#1c1c1c;
+  --text:#fff;
+  --card:#2a2a2a;
+}
+
+/* HERO */
+.hero{
+  height:100vh;
+  background:
+  linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.5)),
+  url('https://i.ibb.co/bR8R0BvV/IMG-0895.jpg') center/cover no-repeat;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  color:white;
+  padding:20px;
+}
+
+.hero h1{font-size:3rem}
+.hero p{margin:15px 0}
+.hero button{
+  padding:12px 30px;
+  border:none;
+  background:var(--primary);
+  color:white;
+  border-radius:30px;
+  cursor:pointer;
+}
+
+/* TOP BAR */
+.top-bar{
+  position:fixed;
+  top:15px;
+  right:15px;
+  display:flex;
+  gap:10px;
+  z-index:1000;
+}
+
+.icon-btn{
+  background:white;
+  border:none;
+  padding:10px;
+  border-radius:50%;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,0.2);
+  position:relative;
+}
+
+.badge{
+  position:absolute;
+  top:-5px;
+  right:-5px;
+  background:red;
+  color:white;
+  font-size:10px;
+  padding:3px 6px;
+  border-radius:50%;
+}
+
+/* PRODUCTS */
+.section{padding:60px 20px}
+.products{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+}
+
+.product-card{
+  background:var(--card);
+  padding:15px;
+  border-radius:15px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.1);
+  transition:0.3s;
+}
+
+.product-card:hover{transform:translateY(-5px)}
+
+.product-card img{width:100%;border-radius:10px}
+
+.price{color:var(--primary);font-weight:bold;margin:8px 0}
+
+.qty-control{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:10px;
+}
+
+.qty-control button{
+  width:30px;height:30px;
+  border:none;background:var(--primary);
+  color:white;border-radius:50%;cursor:pointer;
+}
+
+.search{
+  width:100%;
+  padding:10px;
+  margin-bottom:20px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+/* CART PANEL */
+.cart-panel{
+  position:fixed;
+  right:-400px;
+  top:0;
+  width:350px;
+  height:100%;
+  background:var(--card);
+  box-shadow:-5px 0 15px rgba(0,0,0,0.2);
+  padding:20px;
+  transition:0.4s;
+  z-index:999;
+  overflow-y:auto;
+}
+
+.cart-panel.open{right:0}
+
+.cart-item{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+
+.total{
+  font-weight:bold;
+  margin-top:10px;
+}
+
+/* FORM */
+form input, form textarea{
+  width:100%;
+  padding:8px;
+  margin:5px 0;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+form button{
+  width:100%;
+  padding:10px;
+  background:var(--primary);
+  border:none;
+  color:white;
+  border-radius:8px;
+  margin-top:10px;
+}
+
+/* TOAST */
+.toast{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:black;
+  color:white;
+  padding:10px 20px;
+  border-radius:20px;
+  opacity:0;
+  transition:0.4s;
+}
+
+.toast.show{opacity:1}
+
+/* WHATSAPP */
+.whatsapp{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#25D366;
+  color:white;
+  padding:15px;
+  border-radius:50%;
+  text-decoration:none;
+  font-size:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="top-bar">
+  <button class="icon-btn" onclick="toggleCart()">🛒
+    <span class="badge" id="cartCount">0</span>
+  </button>
+  <button class="icon-btn" onclick="toggleDark()">🌙</button>
+</div>
+
+<section class="hero">
+  <h1>The Local Shop</h1>
+  <p>Fresh Finds, Best Prices</p>
+  <button onclick="document.getElementById('products').scrollIntoView()">Shop Now</button>
+</section>
+
+<section id="products" class="section">
+  <h2>Our Products</h2>
+  <input type="text" class="search" placeholder="Search products..." onkeyup="filterProducts(this.value)">
+  <div class="products" id="productList"></div>
+</section>
+
+<div class="cart-panel" id="cartPanel">
+  <h2>Your Cart</h2>
+  <div id="cartItems"></div>
+  <div class="total" id="totalPrice">Total: ₹0</div>
+
+  <h3>Place Order</h3>
+  <form onsubmit="submitOrder(event)">
+    <input type="text" id="name" placeholder="Customer Name" required>
+    <input type="tel" id="phone" placeholder="Phone Number" required>
+    <textarea id="orderText" readonly></textarea>
+    <button type="submit">Submit Order</button>
+  </form>
+</div>
+
+<div class="toast" id="toast">Added to Cart</div>
+
+<a href="https://wa.me/8398943774" class="whatsapp" target="_blank">💬</a>
+
+<script>
+const products=[
+  {name:"Fresh Apples",price:120,img:"https://i.ibb.co/yFr0P33p/image.jpg"},
+  {name:"Organic Bananas",price:60,img:"https://i.ibb.co/yFr0P33p/image.jpg"},
+  {name:"Fresh Milk",price:50,img:"https://i.ibb.co/yFr0P33p/image.jpg"}
+];
+
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
+
+const productList=document.getElementById("productList");
+
+function renderProducts(list){
+  productList.innerHTML="";
+  list.forEach(p=>{
+    productList.innerHTML+=`
+    <div class="product-card">
+      <img src="${p.img}">
+      <h3>${p.name}</h3>
+      <div class="price">₹${p.price}</div>
+      <div class="qty-control">
+        <button onclick="changeQty('${p.name}',${p.price},-1)">-</button>
+        <button onclick="changeQty('${p.name}',${p.price},1)">+</button>
+      </div>
+    </div>`;
+  });
+}
+
+function changeQty(name,price,delta){
+  let item=cart.find(i=>i.name===name);
+  if(!item && delta>0){
+    cart.push({name,price,qty:1});
+  }else if(item){
+    item.qty+=delta;
+    if(item.qty<=0) cart=cart.filter(i=>i.name!==name);
+  }
+  updateCart();
+  showToast();
+}
+
+function updateCart(){
+  localStorage.setItem("cart",JSON.stringify(cart));
+  document.getElementById("cartCount").textContent=
+    cart.reduce((sum,i)=>sum+i.qty,0);
+
+  const cartItems=document.getElementById("cartItems");
+  cartItems.innerHTML="";
+  let total=0;
+
+  cart.forEach(i=>{
+    total+=i.price*i.qty;
+    cartItems.innerHTML+=`
+      <div class="cart-item">
+        ${i.name} x${i.qty}
+        <span>₹${i.price*i.qty}</span>
+      </div>`;
+  });
+
+  document.getElementById("totalPrice").textContent="Total: ₹"+total;
+  document.getElementById("orderText").value=
+    cart.map(i=>`${i.name} x${i.qty}`).join(", ");
+}
+
+function toggleCart(){
+  document.getElementById("cartPanel").classList.toggle("open");
+}
+
+function toggleDark(){
+  document.body.classList.toggle("dark");
+}
+
+function filterProducts(text){
+  const filtered=products.filter(p=>
+    p.name.toLowerCase().includes(text.toLowerCase()));
+  renderProducts(filtered);
+}
+
+function showToast(){
+  const toast=document.getElementById("toast");
+  toast.classList.add("show");
+  setTimeout(()=>toast.classList.remove("show"),1500);
+}
+
+function submitOrder(e){
+  e.preventDefault();
+  const subject="New Order - The Local Shop";
+  const body=`
+Name: ${name.value}
+Phone: ${phone.value}
+Items: ${orderText.value}
+Total: ₹${cart.reduce((s,i)=>s+i.price*i.qty,0)}
+  `;
+  window.location.href=`mailto:zenith2262007@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  alert("Order Submitted!");
+  cart=[];
+  updateCart();
+  e.target.reset();
+}
+
+renderProducts(products);
+updateCart();
+</script>
+
+</body>
+</html>
